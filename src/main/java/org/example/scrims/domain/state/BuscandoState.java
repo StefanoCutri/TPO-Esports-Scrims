@@ -1,17 +1,19 @@
 package org.example.scrims.domain.state;
 
+import org.example.scrims.domain.model.Rol;
 import org.example.scrims.domain.model.Scrim;
 import org.example.scrims.domain.model.Usuario;
 
 public class BuscandoState implements ScrimState {
     @Override
-    public void postular(ScrimContext ctx, Usuario u) {
+    public void postular(ScrimContext ctx, Usuario u, Rol rol, String ladoDeseado) {
         Scrim s = ctx.getScrim();
-        if (s.estaParticipando(u)) return; // ya está
-        s.agregarPostulacion(u);
+
+        s.agregarPostulacion(u, rol, ladoDeseado);
 
         if (s.estaCompleto()) {
             ctx.setState(new LobbyArmadoState());
+            s.emitirCambioDeEstado("LobbyArmado");
         }
     }
 

@@ -27,4 +27,9 @@ public class ByMMRStrategy implements MatchmakingStrategy {
 
         return seleccion;
     }
+
+    @Override
+    public List<Usuario> ordenar(List<Usuario> usuarios) {
+        return List.of();
+    }
 }

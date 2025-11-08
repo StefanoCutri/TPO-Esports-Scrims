@@ -1,10 +1,19 @@
 package org.example.scrims.app;
 
+import org.example.scrims.domain.model.Rol;
 import org.example.scrims.domain.model.Scrim;
 import org.example.scrims.domain.model.Usuario;
+import org.example.scrims.domain.observer.DiscordNotifierSubscriber;
 import org.example.scrims.domain.observer.DomainEventBus;
-import org.example.scrims.domain.state.BuscandoState;
+import org.example.scrims.domain.observer.EmailNotifierSubscriber;
+import org.example.scrims.domain.observer.PushNotifierSubscriber;
 import org.example.scrims.domain.state.ScrimContext;
+import org.example.scrims.domain.strategy.ByHistoryStrategy;
+import org.example.scrims.domain.strategy.ByLatencyStrategy;
+import org.example.scrims.domain.strategy.ByMMRStrategy;
+import org.example.scrims.domain.strategy.MatchmakingStrategy;
+import org.example.scrims.infra.notify.DevNotifierFactory;
+import org.example.scrims.infra.notify.NotifierFactory;
 
 import java.util.*;
 
@@ -16,10 +25,14 @@ public class AppMenu {
     // “BD” en memoria
     private final Map<String, ScrimContext> scrims = new LinkedHashMap<>();
     private final Map<String, Usuario> usuarios = new LinkedHashMap<>();
+    private final NotifierFactory factory = new DevNotifierFactory();
 
     public AppMenu() {
         // Ver los eventos en consola (además de tus notifiers, si están suscritos)
         bus.subscribe(e -> System.out.println("[EVENT] " + e));
+        bus.subscribe(new DiscordNotifierSubscriber(factory));
+        bus.subscribe(new EmailNotifierSubscriber(factory));
+        bus.subscribe(new PushNotifierSubscriber(factory));
     }
 
     public void run() {
@@ -32,6 +45,7 @@ public class AppMenu {
             System.out.println("5) Confirmar participación");
             System.out.println("6) Iniciar scrim");
             System.out.println("7) Finalizar scrim");
+            System.out.println("8) Cambiar estrategia de emparejamiento");
             System.out.println("0) Salir");
             System.out.print("> ");
             String op = in.nextLine().trim();
@@ -45,6 +59,7 @@ public class AppMenu {
                     case "5" -> confirmarParticipacion();
                     case "6" -> iniciarScrim();
                     case "7" -> finalizarScrim();
+                    case "8" -> cambiarEstrategia();
                     case "0" -> { System.out.println("¡Nos vemos!"); return; }
                     default -> System.out.println("Opción inválida.");
                 }
@@ -117,15 +132,26 @@ public class AppMenu {
             System.out.println("(No hay scrims creados)");
             return;
         }
+
         listarScrims();
         System.out.print("Ingresá el ID del scrim al que querés unirte: ");
         String id = in.nextLine().trim();
         ScrimContext ctx = scrims.get(id);
-        if (ctx == null) { System.out.println("No existe ese scrim."); return; }
+        if (ctx == null) {
+            System.out.println("No existe ese scrim.");
+            return;
+        }
 
         Usuario u = pedirUsuarioExistenteOCrearlo();
-        ctx.postular(u); // tu lógica de State debería manejar transiciones y validaciones
-        System.out.println("✅ " + u.getUsername() + " se postuló al scrim " + id);
+        Rol rol = elegirRol();
+        String lado = elegirLado(); // puede ser null
+
+        try {
+            ctx.postular(u, rol, lado); // ✅ ahora coincide con la firma correcta
+            System.out.println("✅ " + u.getUsername() + " se postuló correctamente.");
+        } catch (Exception e) {
+            System.out.println("⚠️  " + e.getMessage());
+        }
     }
 
     // === Confirmar participación ===
@@ -204,6 +230,62 @@ public class AppMenu {
             System.out.println("⚠️  " + ex.getMessage());
         }
     }
+
+    private void cambiarEstrategia() {
+        System.out.println("""
+        Elegí estrategia:
+        1) Por MMR (default)
+        2) Por Latencia (ping)
+        3) Por Historial / Reputación
+    """);
+
+        int op = leerEntero("> ");
+        MatchmakingStrategy s;
+
+        switch (op) {
+            case 1 -> s = new ByMMRStrategy();
+            case 2 -> s = new ByLatencyStrategy();
+            case 3 -> s = new ByHistoryStrategy();
+            default -> {
+                System.out.println("⚠️ Opción inválida.");
+                return;
+            }
+        }
+
+        // Aplicar a todos los scrims activos
+        scrims.values().forEach(ctx -> ctx.setStrategy(s));
+
+        System.out.println("✅ Estrategia actualizada para todos los scrims.");
+    }
+
+    private Rol elegirRol() {
+        System.out.println("""
+    Elegí tu rol:
+    1) DUELISTA
+    2) TANQUE
+    3) SOPORTE
+    4) FLEX
+    """);
+        int op = leerEntero("Opción: ");
+        return switch(op) {
+            case 1 -> Rol.DUELIST;
+            case 2 -> Rol.ENTRY;
+            case 3 -> Rol.SNIPER;
+            case 4 -> Rol.FLEX;
+            case 5 -> Rol.SUPPORT;
+            default -> {
+                System.out.println("Rol inválido, se asigna FLEX por defecto.");
+                yield Rol.FLEX;
+            }
+        };
+    }
+
+    private String elegirLado() {
+        System.out.print("Elegí lado (A / B) o Enter para auto: ");
+        String lado = in.nextLine().trim().toUpperCase();
+        return (lado.equals("A") || lado.equals("B")) ? lado : null;
+    }
+
 
 
     // ------- Helpers -------

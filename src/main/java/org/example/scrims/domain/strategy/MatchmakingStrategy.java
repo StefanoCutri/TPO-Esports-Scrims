@@ -10,4 +10,6 @@ import java.util.List;
  */
 public interface MatchmakingStrategy {
     List<Usuario> seleccionar(List<Usuario> candidatos, Scrim scrim);
+
+    List<Usuario> ordenar(List<Usuario> usuarios);
 }

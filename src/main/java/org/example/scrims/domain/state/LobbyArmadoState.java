@@ -1,12 +1,13 @@
 package org.example.scrims.domain.state;
 
+import org.example.scrims.domain.model.Rol;
 import org.example.scrims.domain.model.Scrim;
 import org.example.scrims.domain.model.Usuario;
 
 public class LobbyArmadoState implements ScrimState {
 
     @Override
-    public void postular(ScrimContext ctx, Usuario u) {
+    public void postular(ScrimContext ctx, Usuario u, Rol rol, String ladoDeseado) {
         throw new IllegalStateException("El lobby ya está completo. No se puede postular.");
     }
 

@@ -1,10 +1,11 @@
 package org.example.scrims.domain.state;
+import org.example.scrims.domain.model.Rol;
 import org.example.scrims.domain.model.Usuario;
 
 public class EnJuegoState implements ScrimState {
 
     @Override
-    public void postular(ScrimContext ctx, Usuario u) {
+    public void postular(ScrimContext ctx, Usuario u, Rol rol, String ladoDeseado) {
         throw new IllegalStateException("Scrim en juego: no se admiten postulaciones.");
     }
 

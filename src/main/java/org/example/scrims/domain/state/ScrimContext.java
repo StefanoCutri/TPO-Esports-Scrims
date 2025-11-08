@@ -1,15 +1,21 @@
 package org.example.scrims.domain.state;
 
+import org.example.scrims.domain.model.Rol;
 import org.example.scrims.domain.model.Scrim;
 import org.example.scrims.domain.model.Usuario;
 import org.example.scrims.domain.observer.DomainEventBus;
-import org.example.scrims.domain.observer.ScrimStateChanged;
+import org.example.scrims.domain.strategy.ByMMRStrategy;
+import org.example.scrims.domain.strategy.MatchmakingStrategy;
+
+import java.util.List;
+
 
 public class ScrimContext {
 
     private final Scrim scrim;
     private ScrimState state;
     private final DomainEventBus bus;
+    private MatchmakingStrategy strategy = new ByMMRStrategy();
 
 
     public ScrimContext(Scrim scrim, DomainEventBus bus) {
@@ -33,8 +39,8 @@ public class ScrimContext {
     }
 
     // Delegaciones — cada una delega en el estado actual
-    public void postular(Usuario u) {
-        state.postular(this, u);
+    public void postular(Usuario u, Rol rol, String ladoDeseado) {
+        state.postular(this, u, rol, ladoDeseado);
     }
 
     public void confirmar(Usuario u) {
@@ -55,5 +61,9 @@ public class ScrimContext {
 
     public String estadoActual() {
         return state.nombre();
+    }
+
+    public void setStrategy(MatchmakingStrategy s) {
+        this.strategy = s;
     }
 }
