@@ -1,16 +1,21 @@
 package org.example.scrims.domain.state;
 
 import org.example.scrims.domain.model.Scrim;
+import org.example.scrims.domain.model.Usuario;
+import org.example.scrims.domain.observer.DomainEventBus;
 import org.example.scrims.domain.observer.ScrimStateChanged;
 
 public class ScrimContext {
 
     private final Scrim scrim;
     private ScrimState state;
+    private final DomainEventBus bus;
 
-    public ScrimContext(Scrim scrim, ScrimState initialState) {
+
+    public ScrimContext(Scrim scrim, DomainEventBus bus) {
+        this.bus = bus;
         this.scrim = scrim;
-        this.state = initialState;
+        this.state = new BuscandoState();
         scrim.emitirCambioDeEstado(state.nombre());
     }
 
@@ -28,11 +33,11 @@ public class ScrimContext {
     }
 
     // Delegaciones — cada una delega en el estado actual
-    public void postular(org.example.scrims.domain.model.Usuario u) {
+    public void postular(Usuario u) {
         state.postular(this, u);
     }
 
-    public void confirmar(org.example.scrims.domain.model.Usuario u) {
+    public void confirmar(Usuario u) {
         state.confirmar(this, u);
     }
 

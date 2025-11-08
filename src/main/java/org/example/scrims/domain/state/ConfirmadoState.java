@@ -1,13 +1,14 @@
 package org.example.scrims.domain.state;
+import org.example.scrims.domain.model.Usuario;
 
 public class ConfirmadoState implements ScrimState {
     @Override
-    public void postular(ScrimContext ctx, org.example.scrims.domain.model.Usuario u) {
+    public void postular(ScrimContext ctx, Usuario u) {
         throw new IllegalStateException("Scrim confirmado: no se admiten nuevas postulaciones.");
     }
 
     @Override
-    public void confirmar(ScrimContext ctx, org.example.scrims.domain.model.Usuario u) {
+    public void confirmar(ScrimContext ctx, Usuario u) {
         // ya está confirmado el lobby; no hace nada idempotente
     }
 

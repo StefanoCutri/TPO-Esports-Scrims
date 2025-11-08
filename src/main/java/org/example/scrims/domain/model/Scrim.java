@@ -54,6 +54,7 @@ public class Scrim {
         bus.publish(new ScrimStateChanged(id, nuevoEstado));
     }
 
+
     // --- Getters y setters ---
     public String getId(){ return id; }
     public int getRangoMin(){ return rangoMin; }
